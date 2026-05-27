@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
 import { sendError } from "../utils/response";
 import { JwtPayload, UserRole } from "../utils/types";
+
+const jwt = require("jsonwebtoken");
 
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
@@ -13,18 +14,23 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ): void => {
-  const token = req.headers.authorization;
-
-  if (!token) {
-    sendError(res, StatusCodes.UNAUTHORIZED, "Access denied. No token provided.");
-    return;
-  }
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+    const authHeader = req.headers["authorization"];
+
+    if (!authHeader) {
+      sendError(res, StatusCodes.UNAUTHORIZED, "Access denied. No token provided.");
+      return;
+    }
+
+    // Support both "Bearer token" and plain token
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : authHeader;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
     req.user = decoded;
     next();
-  } catch {
+  } catch (err) {
     sendError(res, StatusCodes.UNAUTHORIZED, "Invalid or expired token.");
   }
 };

@@ -1,5 +1,4 @@
-const dotenv = require("dotenv");
-dotenv.config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -28,6 +27,7 @@ const PORT = process.env.PORT ?? 5000;
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`DevPulse server running on port ${PORT}`);
+    console.log("JWT_SECRET:", process.env.JWT_SECRET);
   });
 }
 
